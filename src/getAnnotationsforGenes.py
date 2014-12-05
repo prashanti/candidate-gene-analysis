@@ -1,5 +1,5 @@
 def main():
-	genes=open('zfin-genes.txt','r')
+	genes=open('../data/zfin-genes.txt','r')
 	genelist=[]
 	startline=1
 	linecount=0
@@ -11,7 +11,6 @@ def main():
 	nodata=[]
 	for geneid in genelist:
 		url="http://pkb-new.nescent.org/kb/gene/eq?id="+geneid.strip()
-		print url
 		content = urllib2.urlopen(url).read()
 		raw = nltk.clean_html(content)
 		data = json.loads(raw)
@@ -32,7 +31,7 @@ def main():
 						print geneid+"\t"+""+"\t"+quality
 		else:
 			nodata.append(geneid)				
-	print "nodata",nodata		
+	#print "nodata",nodata		
 	
 
 if __name__ == "__main__":
