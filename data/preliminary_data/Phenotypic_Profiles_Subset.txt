@@ -1,0 +1,28 @@
+Character	Character Label	State Symbol	State Label	Entity ID	Entity Label	Quality ID	Quality Label	Related Entity ID	Related Entity Label	
+1	Elpistostegalia	0	prearticular contacts angular edge-to-edge	BSPO:0000006 and (BFO:0000050 some UBERON:0011637)	'anatomical margin' and (part_of some 'prearticular bone')	PATO:0001961	'in contact with'	BSPO:0000006 and (BFO:0000050 some UBERON:0011079)	'anatomical margin' and (part_of some 'angular bone')
+1	Elpistostegalia	0	median postrostral absent	UBERON:4200242	'median postrostral bone'	PATO:0000462	absent		
+1	Elpistostegalia	0	anterior nostril at edge of mouth	UBERON:2001427 and (BSPO:0000123 some UBERON:0000165)	'anterior naris' and (in_anterior_side_of some mouth)	PATO:0000467	present		
+1	Elpistostegalia	0	jugal/quadratojugal contact	UBERON:0001683	'jugal bone'	PATO:0001961	'in contact with'	UBERON:0011267	'quadratojugal bone'
+1	Elpistostegalia	0	ethmoid proportions ≤35%	UBERON:0001679	'ethmoid bone'	PATO:0000921 and (PATO:decreased_in_magnitude_relative_to some (PATO:0000122 and (BFO:0000052 some UBERON:0001679)))	width and (decreased_in_magnitude_relative_to some (length and (inheres_in some 'ethmoid bone')))		
+1	Elpistostegalia	0	frontals present	UBERON:0000209	'tetrapod frontal bone'	PATO:0000467	present		
+1	Elpistostegalia	0	scapulocoracoid, large plate pierced by coracoid foramen	UBERON:2001737	'coracoid foramen'	PATO:0000467	present		
+1	Elpistostegalia	0	scapulocoracoid, large plate pierced by coracoid foramen	UBERON:0004753	scapulocoracoid	PATO:0000586	'increased size'		
+1	Elpistostegalia	0	scapulocoracoid, large plate pierced by coracoid foramen	UBERON:2001737	'coracoid foramen'	PATO:0002253	platelike		
+1	Elpistostegalia	0	coracoid plate present	UBERON:4200002	'coracoid plate'	PATO:0000467	present		
+1	Elpistostegalia	0	lateral component to glenoid orientation	UBERON:0006657	'glenoid fossa'	PATO:0002497	'lateral orientation'		
+2	Elpistostegalia minus Panderichthys	0	no fang pairs on posterior-most coronoid	UBERON:4200238 and (BFO:0000050 some UBERON:4200237)	'coronoid fang' and (part_of some 'posterior coronoid bone')	PATO:0000462	absent		
+2	Elpistostegalia minus Panderichthys	0	jugal extends anterior to front of orbit	UBERON:0001683	'jugal bone'	PATO:0002464	'extends beyond'	BSPO:0000671 and (BFO:0000050 some UBERON:0001697)	'anterior margin' and (part_of some 'orbit of skull')
+2	Elpistostegalia minus Panderichthys	0	anterior supraorbital 3x longer than broad	UBERON:4200244	'anterior supraorbital bone'	PATO:0000122 and (PATO:increased_in_magnitude_relative_to some (PATO:0000921 and (BFO:0000052 some UBERON:4200244)))	length and (increased_in_magnitude_relative_to some (width and (inheres_in some 'anterior supraorbital bone')))		
+2	Elpistostegalia minus Panderichthys	0	prefrontal much bigger than postfrontal	UBERON:0010750	'prefrontal bone'	PATO:0000586	'increased size'	UBERON:0011168	'postfrontal bone'
+2	Elpistostegalia minus Panderichthys	0	no fusion of supra and infraorbital canals	UBERON:2001810	'supraorbital sensory canal'	PATO:0000651	'unfused from'	UBERON:2001811	'infraorbital sensory canal'
+2	Elpistostegalia minus Panderichthys	0	loss of opercular	UBERON:2001875	'opercular series'	PATO:0000462	absent		
+2	Elpistostegalia minus Panderichthys	0	loss of extrascapular bones	UBERON:2000663	extrascapula	PATO:0000462	absent		
+2	Elpistostegalia minus Panderichthys	0	lost of posttemporals	UBERON:2000549	posttemporal	PATO:0000462	absent		
+2	Elpistostegalia minus Panderichthys	0	ectepicondytlar processes extends distal to epipodial facets	UBERON:4200012	'ectepicondylar flange'	PATO:0002464	'extends beyond'	UBERON:4200214	'epipodial facet'
+2	Elpistostegalia minus Panderichthys	0	radius is shorter than the humerus	UBERON:0001423	'radius bone'	PATO:0000574	'decreased length'	UBERON:0000976	humerus
+2	Elpistostegalia minus Panderichthys	0	expanded ribs present	UBERON:0002228	rib	PATO:0000586	'increased size'		
+2	Elpistostegalia minus Panderichthys	0	very short, laterally directed hyomandibulae	UBERON:0011606	'hyomandibular bone'	PATO:0000574	'decreased length'		
+2	Elpistostegalia minus Panderichthys	0	very short, laterally directed hyomandibulae	UBERON:0011606	'hyomandibular bone'	PATO:0002497	'lateral orientation'		
+4	Ventastega + remaining elpistostegalians	0	anterior and middle coronoid teeth ≤½ the height of dentary teeth	UBERON:0011603	'coronoid tooth'	PATO:0000569	'decreased height'	UBERON:0011594	'dentary tooth'
+4	Ventastega + remaining elpistostegalians	0	anterior coronoid contacts splenial	BSPO:0000671 and (BFO:0000050 some UBERON:0011598)	'anterior margin' and (part_of some 'coronoid bone')	PATO:0001961	'in contact with'	UBERON:0011635	'splenial bone'
+4	Ventastega + remaining elpistostegalians	0	posterior teeth ≥2x height of anterior teeth	UBERON:2001626 and (BSPO:0000122 some UBERON:0002244)	'premaxillary tooth' and (in_posterior_side_of some premaxilla)	PATO:0000570	'increased height'	UBERON:2001626 and (BSPO:0000123 some UBERON:0002244)	'premaxillary tooth' and (in_anterior_side_of some premaxilla)
