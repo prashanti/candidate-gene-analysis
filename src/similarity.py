@@ -1,66 +1,159 @@
+from __future__ import division
+def load_UBERONPATO_superclasses():
+	infile=open("../data/Subsumers.txt")
+	superclasses=dict()
+	for line in infile:
+		term,ancestor=line.split("\t")
+		if term not in superclasses:
+			superclasses[term]=set()
+			superclasses[term].add(term)
+		superclasses[term].add(ancestor.strip())
+	return superclasses
+
+def populate_gene_EQ_subsumers():
+	superclasses=load_UBERONPATO_superclasses()
+	infile=open("../data/Annotations_KBGenes2016.txt")
+	
+	annotations=set()
+	eqsubsumersdict=dict()
+	for line in infile:
+		gene,E,Q=line.split("\t")
+		E=E.strip()
+		Q=Q.strip()
+		if E and E not in superclasses:
+			superclasses[E]=set()
+			superclasses[E].add(E)
+		if Q and Q not in superclasses:
+			superclasses[Q]=set()
+			superclasses[Q].add(Q)
+
+		eqterm=E+Q
+		if eqterm not in eqsubsumersdict:
+			if E and Q:
+				eqsubsumers = [''.join(x) for x in list(itertools.product(superclasses[E],superclasses[Q]))]
+				eqsubsumersdict[eqterm]=list(set.union(set(eqsubsumers),superclasses[Q]))
+			elif E and Q=="":
+				eqsubsumersdict[eqterm]=list(superclasses[E])
+
+			elif E=="" and Q:
+				eqsubsumersdict[eqterm]=list(superclasses[Q])
+
+	
+	populate_profile_EQ_subsumers(eqsubsumersdict,superclasses,1)
+	
+def populate_E_subsumers():
+	
+	superclasses=load_UBERONPATO_superclasses()
+	infile=open("../data/Annotations_KBGenes2016.txt")
+	annotations=set()
+	esubsumersdict=dict()
+	for line in infile:
+		gene,E,Q=line.split("\t")
+		E=E.strip()
+		if E and E not in superclasses:
+			superclasses[E]=set()
+			superclasses[E].add(E)
+	
+	for E in superclasses:
+		superclasses[E]=list(superclasses[E])
+	outfile=open("../data/ESubsumers.txt",'w')
+	
+	json.dump(superclasses,outfile)
+
+
+def populate_profile_EQ_subsumers(eqsubsumers,superclasses,quality):
+	datafile=open("../data/Swartz_phenotypic_profiles.txt")
+	outfile=open("../data/EQSubsumers.txt",'w')
+	datafile.next()
+	for line in datafile:
+		line=line.replace(":","_")
+		characternum=int(line.split("\t")[0].strip())
+		E=line.split("\t")[4].strip()
+		Q=line.split("\t")[6].strip()
+		RE=line.split("\t")[8].strip()
+
+
+		key=E+Q+RE
+
+
+		if key not in superclasses:
+			eqsubsumers[key]=set()
+			
+		if quality ==1:
+			expression=get_expression(E,Q,RE)
+			eqsubsumers[key]=set.union(eqsubsumers[key],superclasses[expression])
+
+		if Q and E:		
+			eqsubsumers[key] = [''.join(x) for x in list(itertools.product(superclasses[E],superclasses[Q]))]		
+			
+		elif E:
+			eqsubsumers[key]=set.union(eqsubsumers[key],superclasses[E])
+		elif Q:
+			eqsubsumers[key]=set.union(eqsubsumers[key],superclasses[Q])
+
+	datafile.close()
+	json.dump(eqsubsumers,outfile)
+
+
+
+
 def populate_query_profiles(quality):
-
-
 	if quality == 0:
-		datafile=open("../data/Phenotypic_Profiles_Subset.txt")
+		datafile=open("../data/Swartz_phenotypic_profiles.txt")
 		queryannotations=dict()
 		for line in datafile:
 			line=line.replace(":","_")
 			if "Character" not in line:
 				characternum=int(line.split("\t")[0].strip())
-				RE=''
 				E=line.split("\t")[4].strip()
 				if characternum not in queryannotations:
 					queryannotations[characternum]=[]
-				queryannotations[characternum].append([E])
+				queryannotations[characternum].append(E)
 		datafile.close()
 		return queryannotations
 
 	if quality ==1:
-		datafile=open("../data/Phenotypic_Profiles_Subset.txt")
+		datafile=open("../data/Swartz_phenotypic_profiles.txt")
 		queryannotations=dict()
 		for line in datafile:
 			line=line.replace(":","_")
 			if "Character" not in line:
 				characternum=int(line.split("\t")[0].strip())
-				RE='null'
 				E=line.split("\t")[4].strip()
 				Q=line.split("\t")[6].strip()
 				RE=line.split("\t")[8].strip()
 				if characternum not in queryannotations:
 					queryannotations[characternum]=[]
-				queryannotations[characternum].append([E,Q,RE])
+				queryannotations[characternum].append(E+Q+RE)
 		datafile.close()
 		return queryannotations
 
 
 def populate_gene_profiles(quality):
 	if quality ==1:
-		datafile=open("../data/zfin-gene-annotations.txt")
+		datafile=open("../data/Annotations_KBGenes2016.txt")
 		geneannotations=dict()
 		for line in datafile:
-			line=line.replace(":","_")
-			gene=line.split("\t")[0].replace("http://zfin.org/","").strip()
+			gene=line.split("\t")[0].strip()
 			E=line.split("\t")[1].strip()
 			Q=line.split("\t")[2].strip()
 			if gene not in geneannotations:
 				geneannotations[gene]=[]
-			geneannotations[gene].append([E,Q])
+			geneannotations[gene].append(E+Q)
 		return geneannotations
 
+
 	if quality ==0:
-		datafile=open("../data/zfin-gene-annotations.txt")
+		datafile=open("../data/Annotations_KBGenes2016.txt")
 		geneannotations=dict()
 		for line in datafile:
-			line=line.replace(":","_")
-			gene=line.split("\t")[0].replace("http://zfin.org/","").strip()
+			gene=line.split("\t")[0].strip()
 			E=line.split("\t")[1].strip()
 			if gene not in geneannotations:
 				geneannotations[gene]=[]
-			if E != '':	
-				geneannotations[gene].append([E])
+			if E!='':
+				geneannotations[gene].append(E)
 		return geneannotations
-
 
 def get_name(term):
 	term=term.replace(" ","")
@@ -72,65 +165,69 @@ def get_name(term):
 	term=term.replace("inheres_in","RO_0000052")
 	return(term.strip())
 
-def prepare_corpus(geneprofiles,superclasses,cc,quality):
+def compute_ic(geneprofiles,queryprofiles,subsumers,quality):
+	
 	if quality ==1:
-		outfile=open("../data/Annotation-Corpus_EQ1.txt",'w')
-		annotationcount=dict()
-		corpussize=0
-		termic=dict()
-		annotationgenecount=dict()
-		for gene in geneprofiles:
-			tempancestorset=set()
-			for annotation in geneprofiles[gene]:
-				E=annotation[0]
-				Q=annotation[1]
-				classname=get_name(E+Q)
+		icout=open("../data/AnnotationIC.txt",'w')
+		annotationlist=[]
+		for geneid in geneprofiles:
+			for annotation in geneprofiles[geneid]:
+				annotationlist+=list(subsumers[annotation])
+		for profileid in queryprofiles:
+			for annotation in queryprofiles[profileid]:
+				annotationlist+=list(subsumers[annotation])
 
-				if classname not in superclasses:
-					superclasses=get_super_classes(E,Q,'',superclasses,cc,quality)
-				superclasslist=superclasses[classname]
-				for superclass in superclasslist:
-					tempancestorset.add(superclass)
-			outfile.write(gene+"\t"+','.join(tempancestorset)+"\n")
-			for anc in tempancestorset:
-				if anc not in annotationgenecount:
-					annotationgenecount[anc]=0
-				annotationgenecount[anc]+=1
-		return superclasses,annotationgenecount,len(geneprofiles)
+		corpussize=len(annotationlist)
+		maxic=-math.log(1/corpussize,2)
+		freq=dict()
+		for annotation in annotationlist:
+			if annotation not in freq:
+				freq[annotation]=0
+			freq[annotation]+=1
+		
+		icdict=dict()
+		for annotation in set(annotationlist):
+			p=freq[annotation]/corpussize
+			print freq[annotation]
+			ic=-math.log(p,2)
+			icdict[annotation]=round(ic/maxic,2)
+
+
+		json.dump(icdict,icout)
+		icout.close()
+		
 		
 
-	if quality ==0:
-		outfile=open("../data/Annotation-Corpus_E.txt",'w')
-		annotationcount=dict()
-		corpussize=0
-		termic=dict()
-		annotationgenecount=dict()
-		for gene in geneprofiles:
-			tempancestorset=set()
-			for annotation in geneprofiles[gene]:
-				E=annotation[0]
-				classname=get_name(E)
+	elif quality ==0:
+		icout=open("../data/E_AnnotationIC.txt",'w')
+		annotationlist=[]
+		for geneid in geneprofiles:
+			for annotation in geneprofiles[geneid]:
 
-				if classname not in superclasses:
-					superclasses=get_super_classes(E,'','',superclasses,cc,quality)
-				superclasslist=superclasses[classname]
-					
-				for superclass in superclasslist:
-					tempancestorset.add(superclass)
-			outfile.write(gene+"\t"+','.join(tempancestorset)+"\n")
-			for anc in tempancestorset:
-				if anc not in annotationgenecount:
-					annotationgenecount[anc]=0
-				annotationgenecount[anc]+=1
-		return superclasses,annotationgenecount,len(geneprofiles)
+				annotationlist+=list(subsumers[annotation])
+		for profileid in queryprofiles:
+			for annotation in queryprofiles[profileid]:
+				annotationlist+=list(subsumers[annotation])
 
-def compute_IC(annotationgenecount,corpussize):
-	termic=dict()
-	maximum=round(-math.log(float(1)/float(corpussize)),2)
-	for term in annotationgenecount:
-		ic=-math.log(float(annotationgenecount[term])/float(corpussize))
-		termic[term]=round(ic/maximum,2)
-	return termic
+		corpussize=len(annotationlist)
+		maxic=-math.log(1/corpussize,2)
+		freq=dict()
+		for annotation in annotationlist:
+			if annotation not in freq:
+				freq[annotation]=0
+			freq[annotation]+=1
+		
+		icdict=dict()
+		for annotation in set(annotationlist):
+			p=freq[annotation]/corpussize
+			ic=-math.log(p,2)
+			icdict[annotation]=round(ic/maxic,2)
+
+
+		json.dump(icdict,icout)
+		icout.close()
+
+
 
 def get_expression(E,Q,RE):
 	if "Entity ID" in E:
@@ -170,86 +267,8 @@ def load_query_superclasses(queryprofiles,superclasses,cc,quality):
 				superclasses=get_super_classes(annotation[0],'','',superclasses,cc,quality)
 		return superclasses		
 
-def get_super_classes(E,Q,RE,superclasses,cc,quality):
-
-	key=get_name(E+Q+RE)
 
 
-	if E and E not in superclasses:
-		superclasses=load_ancestors(E,superclasses,cc)
-		
-	if Q and Q not in superclasses:
-		superclasses=load_ancestors(Q,superclasses,cc)
-	if RE and RE not in superclasses:
-		superclasses=load_ancestors(RE,superclasses,cc)
-	if key not in superclasses:
-		superclasses[key]=set()
-		
-	if quality ==1:
-		expression=get_expression(E,Q,RE)
-		if expression and expression not in superclasses:
-			superclasses=load_ancestors(expression,superclasses,cc)	
-		for ancExpression in superclasses[expression]:
-			# these ancestors are already in get_name format.
-			superclasses[key].add(ancExpression)	
-
-
-	if Q and E and RE:
-		for ancE in superclasses[E]:
-			for ancQ in superclasses[Q]:
-				for ancRE in superclasses[RE]:
-						superclasses[key].add(get_name(ancE+ancQ+ancRE).strip())
-						superclasses[key].add(get_name(ancE+ancQ).strip())
-						
-	elif E and Q:
-		for ancE in superclasses[E]:
-			for ancQ in superclasses[Q]:
-				superclasses[key].add(get_name(ancE+ancQ).strip())
-				
-	elif Q and RE:
-		for ancRE in superclasses[RE]:
-			for ancQ in superclasses[Q]:
-				superclasses[key].add(get_name(e2+q1).strip())
-
-	elif E and RE:
-		for ancE in superclasses[E]:
-			for ancRE in superclasses[RE]:
-					superclasses[key].add(get_name(ancE+ancRE).strip())
-					superclasses[key].add(get_name(ancE).strip())					
-	elif E:
-		for ancE in superclasses[E]:
-			superclasses[key].add(get_name(ancE).strip())
-	elif RE:
-		for ancRE in superclasses[RE]:
-			superclasses[key].add(get_name(ancRE).strip())
-	elif Q:
-		for ancQ in superclasses[Q]:
-			superclasses[key].add(get_name(ancQ).strip())
-	else:
-		1
-	return superclasses
-
-
-def get_EQ_similarity(EQ1,EQ2,superclasses,termic):
-	annotation1="".join(EQ1)
-	annotation2="".join(EQ2)
-	class1=get_name(annotation1)
-	class2=get_name(annotation2)
-	commonancestors=set.intersection(superclasses[class1],superclasses[class2])
-	maxic=0
-	simj=0
-	simj=float(len(set.intersection(superclasses[class1],superclasses[class2])))/float(len(set.union(superclasses[class1],superclasses[class2])))
-	# print "annotations being compared",annotation1,annotation2
-	# print "common ancestor set",set.intersection(superclasses[class1],superclasses[class2])
-	# print "unionset",set.union(superclasses[class1],superclasses[class2])
-	# print "\n\n\n"
-	for anc in commonancestors:
-		ic=termic[anc]
-	
-		if ic > maxic:
-			maxic=ic
-
-	return simj,maxic
 
 
 def get_E_similarity(EQ1,EQ2,superclasses,termic):
@@ -270,81 +289,160 @@ def get_E_similarity(EQ1,EQ2,superclasses,termic):
 
 	return simj,maxic
 
-def load_ancestors(term,superclasses,cc):
-	term=term.strip()
-	superclasses[term]=set()
-	#NOTE: The term itself needs to be added to the list of ancestors
-	query="select ancestor from tbl_candidategeneanalysis where term = "+ "\""+term+"\""
-	cc.execute(query)	
-	data = cc.fetchall()
-	superclasses[term].add(get_name(term))
-	for row in data:
-		superclasses[term].add(row[0])
-		
-	return superclasses
+def getmicaic(term1,term2,ancestors,icdict):
+    micaic=0
+    mica=""
+    commonancestors=set.intersection(set(ancestors[term1]),set(ancestors[term2]))
+    lcslist=[icdict[anc] for anc in commonancestors]
+    
+    
+    if len(lcslist)>0:
+        micaic=np.max(lcslist)     
+        return micaic
+    else:
+        return 0
+
+def calculate_bestpairs_asymmetric_resnik(profile1,profile2,icdict,ancestors,bpsimilaritydict):
+    finalsim=0
+    bestmatchiclist=[]
+    termmatchic=[]
+    matchdata=[]
+    for term1 in profile1:
+        termmatchic=[]
+        for term2 in profile2:
+            termtuple=tuple(sorted((term1,term2)))
+            if termtuple in bpsimilaritydict:
+                termmatchic.append(bpsimilaritydict[termtuple])
+            
+            else:
+                micaic=getmicaic(term1,term2,ancestors,icdict)
+                termmatchic.append(micaic)
+                bpsimilaritydict[termtuple]=micaic
+        bestmatchiclist.append(np.max(termmatchic))
+
+    return bpsimilaritydict,np.median(bestmatchiclist)
+
+def calculate_bestpairs_symmetric_resnik(profile1,profile2,icdict,ancestors,bpsimilaritydict):
+    finalsim=0
+    bestmatchiclist1=[]
+    bestmatchiclist2=[]
+    termmatchic=[]
+    matchdata=[]
+    for term1 in profile1:
+        termmatchic=[]
+        for term2 in profile2:
+            termtuple=tuple(sorted((term1,term2)))
+            if termtuple in bpsimilaritydict:
+                termmatchic.append(bpsimilaritydict[termtuple])
+            
+            else:
+                micaic=getmicaic(term1,term2,ancestors,icdict)
+                termmatchic.append(micaic)
+                bpsimilaritydict[termtuple]=micaic
+        
+        bestmatchiclist1.append(np.max(termmatchic))
+    
+
+    termmatchic=[]
+    matchdata=[]
+    for term1 in profile2:
+        termmatchic=[]
+        for term2 in profile1:
+            termtuple=tuple(sorted((term1,term2)))
+            termmatchic.append(bpsimilaritydict[termtuple])
+        bestmatchiclist2.append(np.max(termmatchic))
+            
+    return bpsimilaritydict,np.mean((np.median(bestmatchiclist1),np.median(bestmatchiclist2)))
 
 
-
+def get_evidence(filename):
+	eqresults=open("../data/EQResults_Symm_Resnik_CandidateGenes.tsv")
+	eqresults.next()
+	evidencedict=dict()
+	genesymboldict=dict()
+	
+	for line in eqresults:
+		data=line.strip().split("\t")
+		characternum,geneid,genesymbol,evidence=data[0],data[1],data[2],data[4]
+		evidencedict[characternum+"\t"+geneid]=evidence
+		genesymboldict[characternum+"\t"+geneid]=genesymbol
+	eqresults.close()
+	outfile=open("../data/EResults_Symm_Resnik_CandidateGenes.tsv",'w')
+	outfile.write("Character Number	GeneID	Genename	E IC	Evidence\n")
+	eresults=open(filename)
+	eresults.next()
+	for line in eresults:
+		data=line.strip().split("\t")
+		characternum,geneid,score=data[0],data[1],data[2]
+		evidence=evidencedict[characternum+"\t"+geneid]
+		genesymbol=genesymboldict[characternum+"\t"+geneid]
+		outfile.write(characternum+"\t"+geneid+"\t"+genesymbol+"\t"+str(score)+"\t"+evidence+"\n")
+	outfile.close()
+	sys.exit()
 
 
 def main():
-	quality=int(sys.argv[1])
-	cursor = db.cursor()
-	superclasses=dict()
+	granularity=sys.argv[1]
+	get_evidence("../data/EComparisonScores_Symm_Resnik.tsv")
 
+	if granularity=="EQ":
+		# run only once. Subsumer dict is written to "../data/2016/EQSubsumers.txt"
+		#populate_gene_EQ_subsumers()
+		eqsubsumers=json.load(open("../data/EQSubsumers.txt"))
+		icdict=json.load(open("../data/AnnotationIC.txt"))
+		queryprofiles=populate_query_profiles(quality)
+		geneprofiles=populate_gene_profiles(quality)	
+		#compute_ic(geneprofiles,queryprofiles,eqsubsumers,quality)
 
-	queryprofiles=populate_query_profiles(quality)
-	geneprofiles=populate_gene_profiles(quality)	
-	superclasses,annotationgenecount,corpussize=prepare_corpus(geneprofiles,superclasses,cursor,quality)
-	superclasses=load_query_superclasses(queryprofiles,superclasses,cursor,quality)
+		
+		outfile=open("../data/EQComparisonScores_Symm_Resnik.tsv",'w')
+		
+		outfile.write("Character Number\tGene\tMedian nIC\n")
+		bpsimilaritydict=dict()
+		for characternum in queryprofiles:
+			for gene in geneprofiles:
+				profile1=queryprofiles[characternum]
+				profile2=geneprofiles[gene]
+				print "Comparing character",characternum," and gene ",gene
+				print len(profile1),len(profile2)
+				if len(profile2)==0:
+					maxsimj=0
+					maxic=0
+				else:
+					#bpsimilaritydict,medianic=calculate_bestpairs_asymmetric_resnik(profile1,profile2,icdict,eqsubsumers,bpsimilaritydict)
 
+					bpsimilaritydict,medianic=calculate_bestpairs_symmetric_resnik(profile1,profile2,icdict,eqsubsumers,bpsimilaritydict)
+					
+				outfile.write(str(characternum)+"\t"+gene+"\t"+str(medianic)+ "\n")
+		outfile.close()
 
+	elif quality==0:
+		queryprofiles=populate_query_profiles(quality)
+		geneprofiles=populate_gene_profiles(quality)	
+		#populate_E_subsumers()
+		subsumers=json.load(open("../data/ESubsumers.txt"))
+		compute_ic(geneprofiles,queryprofiles,subsumers,quality)
+		icdict=json.load(open("../data/E_AnnotationIC.txt"))
 
-	termic=compute_IC(annotationgenecount,corpussize)
-	if quality ==1:
-		outfile=open("../data/EQComparisonScores1.tsv",'w')
-	if quality ==0:
-		outfile=open("../data/EComparisonScores.tsv",'w')
+		outfile=open("../data/EComparisonScores_Symm_Resnik.tsv",'w')
 
-	outfile.write("Character Number\tGene\tMax SimJ\t Max nIC\n")
-
-
-	# profile1=queryprofiles[1]
-	# profile2=geneprofiles['http_//zfin.org/ZDB-GENE-070117-1345']
-
-
-	# for annotation1 in profile1:
-	# 	for annotation2 in profile2:
-	# 		simj,ic=get_EQ_similarity(annotation1,annotation2,superclasses,termic)
-	# 		print simj,ic
+		outfile.write("Character Number\tGene\tMedian nIC\n")
+		bpsimilaritydict=dict()
+		for characternum in queryprofiles:
+			for gene in geneprofiles:
+				profile1=queryprofiles[characternum]
+				profile2=geneprofiles[gene]
+				print "Comparing character",characternum," and gene ",gene
+				if len(profile2)==0:
+					maxsimj=0
+					maxic=0
+				else:
+					bpsimilaritydict,medianic=calculate_bestpairs_symmetric_resnik(profile1,profile2,icdict,subsumers,bpsimilaritydict)
+					
+				outfile.write(str(characternum)+"\t"+gene+"\t"+str(medianic)+ "\n")
+		outfile.close()
 
 	
-	for characternum in queryprofiles:
-		for gene in geneprofiles:
-			iclist=[]
-			simjlist=[]
-			profile1=queryprofiles[characternum]
-			profile2=geneprofiles[gene]
-			
-			print "Comparing character",characternum," and gene ",gene
-
-			if len(profile2)==0:
-				maxsimj=0
-				maxic=0
-			else:
-				for annotation1 in profile1:
-					for annotation2 in profile2:
-						if quality ==1:
-
-							simj,ic=get_EQ_similarity(annotation1,annotation2,superclasses,termic)
-						if quality==0:
-							simj,ic=get_E_similarity(annotation1,annotation2,superclasses,termic)
-						simjlist.append(simj)
-						iclist.append(ic)
-				maxsimj=numpy.max(simjlist)
-				maxic=numpy.max(iclist)
-			outfile.write(str(characternum)+"\t"+gene+"\t"+str(maxsimj)+"\t"+str(maxic)+ "\n")
-	outfile.close()
 
 
 
@@ -354,7 +452,9 @@ def main():
 
 if __name__ == "__main__":
 	import math
+	import json
+	import itertools
 	import MySQLdb
 	import sys
-	import numpy
+	import numpy as np
 	main()
