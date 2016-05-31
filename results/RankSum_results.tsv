@@ -1,0 +1,16 @@
+Metric	Granularity	Median (rank difference)	Mann Whitney statistic	One sided p-value
+bp_sym_jaccard	EA	15412.75	39468429.5	9.93E-47
+bp_sym_jaccard	EQ	13128.5	38021673	4.24E-34
+bp_sym_jaccard	E	4921.25	35417953.5	1.57E-16
+				
+bp_sym_pic_resnik	EA	31638.75	46070715.5	1.76E-130
+bp_sym_pic_resnik	EQ	31395.25	46014662.5	1.38E-129
+bp_sym_pic_resnik	E	29607	45632963.5	1.34E-123
+				
+groupwise_jaccard	E	28276	43732200	6.53E-96
+groupwise_jaccard	EA	25736.5	43077307	3.40E-87
+groupwise_jaccard	EQ	20908.75	42031263	3.79E-74
+				
+pic_simGIC	E	32344	45736847	3.24E-125
+pic_simGIC	EA	30992	44663423	4.95E-109
+pic_simGIC	EQ	28224	44597046.5	4.55E-108

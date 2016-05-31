@@ -1,0 +1,16 @@
+Metric	Granularity	Evd 1 Median rank	Evd 2 Median rank	Evd 3 Median rank	Evd 4 Median rank
+bp_sym_jaccard	E	47700.25	46406.5	49135.5	43979.5
+bp_sym_jaccard	EA	61520.25	56530.75	58430	43983.5
+bp_sym_jaccard	EQ	58767	53128.5	56373.5	44012.5
+
+bp_sym_pic_resnik	E	80283.5	66944.5	68774.75	43043
+bp_sym_pic_resnik	EA	80416.75	73390	70672	44027.5
+bp_sym_pic_resnik	EQ	81610	71066.5	71066.5	43929.5
+
+groupwise_jaccard	E	76381	67044.5	69112	43949.5
+groupwise_jaccard	EA	71286.25	62113.5	68764	43944
+groupwise_jaccard	EQ	65629.5	60081.75	64841.75	43945.5
+
+pic_simGIC	E	81358.5	74135	68197.5	43916.5
+pic_simGIC	EA	79520	72418.5	67416	43933.5
+pic_simGIC	EQ	78440.5	68447.5	67694.5	43921.5
