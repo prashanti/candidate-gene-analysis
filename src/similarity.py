@@ -545,53 +545,6 @@ def populate_all_subsumers():
 	populate_EQ_subsumers()
 
 
-def compile_synonyms():
-	infile=open("../data/Candidate_Genes_Paula.tsv")
-	evidencedict=dict()
-	syndict=dict()
-	infile.next()
-	for line in infile:
-		data=line.strip().split("\t")
-		evidence=int(data[7])
-		names=set()
-		for name in [data[0],data[1],data[2].split("(")[0]]:
-			if "," in name:
-				for temp in name.split(","):
-					if temp.strip()!="":
-						names.add(temp.strip().lower())
-			elif name.strip()!="":
-				names.add(name.strip().lower())
-		for name in names:
-			if name not in evidencedict:
-				evidencedict[name]=evidence
-			elif evidence<evidencedict[name]:
-				evidencedict[name]=evidence
-			if name not in syndict:
-				syndict[name]=set.difference(names,name)
-			else:
-				syndict[name]=set.union(syndict[name],set.difference(names,name))
-	
-		for name in syndict:
-			for syn in syndict[name]:
-				if syn in syndict:
-					syndict[name]=set.difference(set.union(syndict[name],syndict[syn]),set([name]))
-	for name in syndict:
-		syndict[name]=list(syndict[name])
-	outfile=open("../results/Candidategene_synonyms.txt",'w')
-	json.dump(syndict,outfile)
-	outfile.close()
-	print evidencedict
-	return syndict,evidencedict
-
-def compile_best_evidence(syndict,evidencedict):
-	for name in evidencedict:
-		if len(syndict[name])>0:
-			syndict[name].append(name)
-			minevidence=min([evidencedict[y] for y in [x for x in syndict[name]]])
-			evidencedict[name]=minevidence
-	outfile=open("../data/Candidategene_bestevidence.txt",'w')
-	json.dump(evidencedict,outfile)
-	return evidencedict
 def main():
 	
 	granularity=sys.argv[1]
