@@ -1,6 +1,8 @@
 import json
 import urllib2
 import time
+import requests
+import sys
 
 """gene_parser.py:
     Parses genes from a source file (ZDB, MGI, NIH, or XB type) and finds a corresponding identifier in a target file.
@@ -11,8 +13,29 @@ import time
         target file is missing entries that can be found on ensembl"""
 
 __author__ = "Alex Hahn"
-__version__ = "1.1"
+__version__ = "1.1.1"
 __email__ = "ashahn@uncg.edu"
+
+"""
+    Change Log
+
+        1.0
+            - Program parses genes from a source file (KBGenes) and gets ensembl IDs from 4 text files (one for each
+                species type).
+            - If a gene is not found, output "Not found" in the output file.
+            - Output is tab-separated with a URL id followed by its ensembl ID.
+
+        1.1
+            - If a gene is not found in a text file, then search rest.ensembl.org for its ID. If it is found on
+                ensembl.org, then output its correct ID. If it is still not found, output "Not found".
+            - rest.ensembl.org is queried using the 'urllib2' and 'json' packages.
+
+        1.1.1
+            - Version 1.1 had stability issues with urllib2 and urlopen(). Some executions ran smoothly, while others
+                would timeout and fail.
+            - rest.ensembl.org requests are now performed using the 'requests' package.
+                - So far, this has resolved the timeout issue.
+"""
 
 
 class Parser:
@@ -23,8 +46,10 @@ class Parser:
         self.SOURCE_DIR = "../data/KBGenes_2016.tsv"
         self.TARGET_DIR = "../results/Gene_Parser_Result.tsv"
 
-        # URL to get JSON data from Ensembl REST API, with REPLACE strings to use for specific species and genes
-        self.LOOKUP = "https://rest.ensembl.org/xrefs/symbol/REPLACE_SPECIES/REPLACE_GENE?content-type=application/json"
+        # # URL to get JSON data from Ensembl REST API, with REPLACE strings to use for specific species and genes
+        # self.LOOKUP = "https://rest.ensembl.org/xrefs/symbol/REPLACE_SPECIES/REPLACE_GENE?content-type=application/json"
+
+        self.SERVER = "https://rest.ensembl.org"
 
         # Location of search files for each gene type
         self.ZDB_DIR = "../data/ensembl_1_to_1.txt"
@@ -39,7 +64,7 @@ class Parser:
     # This method reads each line of the source file and determines which type of gene the current line contains. Then,
     # it calls the search_file method to get the results
     def read_source(self):
-        connection_count = 0
+        # connection_count = 0
 
         # Read each line in the input file
         # Search its corresponding gene file
@@ -47,29 +72,33 @@ class Parser:
         for line in self.source:
             print_id = None
             short_gene = line[line.find("\"") + 1:line.find("\"", line.find("\"") + 1)]
-            search_url = None
+            # search_url = None
+            ext = None
             result = None
 
             if line.find("zfin.org/ZDB-GENE") != -1:
                 print_id = line[1:line.find(">", 1)]
                 search_id = line[line.find("ZDB"):line.find(">", line.find("ZDB"))]
-                search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
-                search_url = search_url.replace("REPLACE_SPECIES", "danio_rerio")
+                # search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
+                # search_url = search_url.replace("REPLACE_SPECIES", "danio_rerio")
+                ext = "/xrefs/symbol/danio_rerio/" + short_gene + "?"
                 result = self.search_file(self.ZDB_DIR, search_id, 3)
 
             elif line.find("www.informatics.jax.org/marker/MGI") != -1:
                 print_id = line[1:line.find(">", 1)]
                 search_id = line[line.find("MGI"):line.find(">", line.find("MGI"))]
-                search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
-                search_url = search_url.replace("REPLACE_SPECIES", "mus_musculus")
+                # search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
+                # search_url = search_url.replace("REPLACE_SPECIES", "mus_musculus")
+                ext = "/xrefs/symbol/mus_musculus/" + short_gene + "?"
                 result = self.search_file(self.MGI_DIR, search_id, 10)
 
             elif line.find("www.ncbi.nlm.nih.gov") != -1:
                 print_id = line[1:line.find(">", 1)]
                 nih_id_start_index = line.find("/", line.find("gene")) + 1
                 search_id = line[nih_id_start_index:line.find(">", nih_id_start_index)]
-                search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
-                search_url = search_url.replace("REPLACE_SPECIES", "homo_sapiens")
+                # search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
+                # search_url = search_url.replace("REPLACE_SPECIES", "homo_sapiens")
+                ext = "/xrefs/symbol/homo_sapiens/" + short_gene + "?"
                 result = self.search_file(self.NIH_DIR, search_id, 2)
 
             # For XB-Gene, use the gene name in col 1 from the source file. Using the ID from col 0 did not yield any
@@ -79,18 +108,28 @@ class Parser:
                 # search_id = "XB-GENE-" + raw_search_id[12:]
                 print_id = line[1:line.find(">", 1)]
                 search_id = line[line.find("\"", line.find("XB-GENE")) + 1:line.find("\"", line.find("\"") + 1)]
-                search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
-                search_url = search_url.replace("REPLACE_SPECIES", "xenopus")
+                # search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
+                # search_url = search_url.replace("REPLACE_SPECIES", "xenopus")
+                ext = "/xrefs/symbol/xenopus/" + short_gene + "?"
                 result = self.search_file(self.XB_DIR, search_id, 3)
 
             if print_id is not None:
-                if result == "Not found" and search_url is not None:
-                    connection_count += 1
-                    if connection_count % 50 == 0:
-                        time.sleep(3)
-                    data = json.load(urllib2.urlopen(search_url))
-                    if data:
-                        result = data[0]["id"]
+                if result == "Not found" and ext is not None:
+                    # connection_count += 1
+                    # if connection_count % 50 == 0:
+                    #     time.sleep(3)
+                    r = requests.get(self.SERVER+ext, headers={"Content-Type": "application/json"})
+
+                    if not r.ok:
+                        r.raise_for_status()
+                        sys.exit()
+
+                    decoded = r.json()
+                    if decoded:
+                        result = decoded[0]["id"]
+                    # data = json.load(urllib2.urlopen(search_url))
+                    # if data:
+                    #     result = data[0]["id"]
             else:
                 result = "Gene not supported"
 
