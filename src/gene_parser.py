@@ -1,0 +1,125 @@
+import json
+import urllib2
+import time
+
+"""gene_parser.py:
+    Parses genes from a source file (ZDB, MGI, NIH, or XB type) and finds a corresponding identifier in a target file.
+    Genes and identifiers are printed to an output file <../data/Gene_Parser_Result.tsv>
+    If a gene type is not ZDB, MGI, NIH, or XB type; the program will print "Gene not supported" in the output file.
+    If a specific gene is not found in the target file, program will print "Not found" in the output file.
+    If a specific gene is not found in the target file, program will ALSO check rest.ensembl.org in case a particular
+        target file is missing entries that can be found on ensembl"""
+
+__author__ = "Alex Hahn"
+__version__ = "1.1"
+__email__ = "ashahn@uncg.edu"
+
+
+class Parser:
+
+    def __init__(self):
+
+        # Location of input/source file
+        self.SOURCE_DIR = "../data/KBGenes_2016.tsv"
+        self.TARGET_DIR = "../results/Gene_Parser_Result.tsv"
+
+        # URL to get JSON data from Ensembl REST API, with REPLACE strings to use for specific species and genes
+        self.LOOKUP = "https://rest.ensembl.org/xrefs/symbol/REPLACE_SPECIES/REPLACE_GENE?content-type=application/json"
+
+        # Location of search files for each gene type
+        self.ZDB_DIR = "../data/ensembl_1_to_1.txt"
+        self.MGI_DIR = "../data/MGI_Gene_Model_Coord.rpt"
+        self.NIH_DIR = "../data/gene2ensembl.tsv"
+        self.XB_DIR = "../data/GenePageEnsemblModelMapping.txt"
+
+        # Open files
+        self.source = open(self.SOURCE_DIR, "r")
+        self.target = open(self.TARGET_DIR, "w+")
+
+    # This method reads each line of the source file and determines which type of gene the current line contains. Then,
+    # it calls the search_file method to get the results
+    def read_source(self):
+        connection_count = 0
+
+        # Read each line in the input file
+        # Search its corresponding gene file
+        # Output the results to the output file
+        for line in self.source:
+            print_id = None
+            short_gene = line[line.find("\"") + 1:line.find("\"", line.find("\"") + 1)]
+            search_url = None
+            result = None
+
+            if line.find("zfin.org/ZDB-GENE") != -1:
+                print_id = line[1:line.find(">", 1)]
+                search_id = line[line.find("ZDB"):line.find(">", line.find("ZDB"))]
+                search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
+                search_url = search_url.replace("REPLACE_SPECIES", "danio_rerio")
+                result = self.search_file(self.ZDB_DIR, search_id, 3)
+
+            elif line.find("www.informatics.jax.org/marker/MGI") != -1:
+                print_id = line[1:line.find(">", 1)]
+                search_id = line[line.find("MGI"):line.find(">", line.find("MGI"))]
+                search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
+                search_url = search_url.replace("REPLACE_SPECIES", "mus_musculus")
+                result = self.search_file(self.MGI_DIR, search_id, 10)
+
+            elif line.find("www.ncbi.nlm.nih.gov") != -1:
+                print_id = line[1:line.find(">", 1)]
+                nih_id_start_index = line.find("/", line.find("gene")) + 1
+                search_id = line[nih_id_start_index:line.find(">", nih_id_start_index)]
+                search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
+                search_url = search_url.replace("REPLACE_SPECIES", "homo_sapiens")
+                result = self.search_file(self.NIH_DIR, search_id, 2)
+
+            # For XB-Gene, use the gene name in col 1 from the source file. Using the ID from col 0 did not yield any
+            # results in the search file.
+            elif line.find("xenbase.org/XB-GENEPAGE") != -1:
+                # raw_search_id = line[line.find("XB"):line.find(">", line.find("XB"))]
+                # search_id = "XB-GENE-" + raw_search_id[12:]
+                print_id = line[1:line.find(">", 1)]
+                search_id = line[line.find("\"", line.find("XB-GENE")) + 1:line.find("\"", line.find("\"") + 1)]
+                search_url = self.LOOKUP.replace("REPLACE_GENE", short_gene)
+                search_url = search_url.replace("REPLACE_SPECIES", "xenopus")
+                result = self.search_file(self.XB_DIR, search_id, 3)
+
+            if print_id is not None:
+                if result == "Not found" and search_url is not None:
+                    connection_count += 1
+                    if connection_count % 50 == 0:
+                        time.sleep(3)
+                    data = json.load(urllib2.urlopen(search_url))
+                    if data:
+                        result = data[0]["id"]
+            else:
+                result = "Gene not supported"
+
+            if print_id is not None and result is not None:
+                self.output_result(print_id, result)
+
+    # This method can search any of the gene search files. It takes the file path, search key, and a column number as
+    # parameters. The column number specifies which file to input from the search file.
+    def search_file(self, path, key, col):
+        s_file = open(path, "r")
+
+        for line in s_file:
+            if line.find(key) != -1:
+                return line.split('\t')[col]
+
+        return "Not found"
+
+    # This method outputs the results to the output file. It takes the key and its corresponding result as parameters
+    # and simply outputs them in a tab-separated file (.tsv).
+    def output_result(self, key, result):
+        self.target.write(key + "\t" + result)
+
+        if result.find("\n") == -1:
+            self.target.write("\n")
+
+# Main method
+if __name__ == '__main__':
+
+    # Make a Parser object and complete the gene parsing.
+    parser = Parser()
+    parser.read_source()
+
