@@ -61,7 +61,7 @@ class Parser:
     def read_source(self, source_file):
         source = open(source_file, "r")
 
-        target_file = "../results/" + source_file[source_file.rfind("/") + 1:]
+        target_file = "../data/" + source_file[source_file.rfind("/") + 1:]
         target_file = target_file[:target_file.rfind(".")] + "_EnsemblIDs.tsv"
         target = open(target_file, "w+")
 
@@ -101,8 +101,7 @@ class Parser:
                     search_id = short_gene
                 else:
                     short_gene = line[line.find("\"") + 1:line.find("\"", line.find("\"") + 1)]
-                    nih_id_start_index = line.find("/", line.find("gene")) + 1
-                    search_id = line[nih_id_start_index:line.find(">", nih_id_start_index)]
+                    search_id = short_gene
 
                 ext = "/xrefs/symbol/homo_sapiens/" + short_gene + "?"
                 result = self.search_file(self.NIH_DIR, search_id, 2)
