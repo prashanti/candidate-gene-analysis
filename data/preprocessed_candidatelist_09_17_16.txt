@@ -12,7 +12,6 @@ irx2	4	human
 hoxa13	4	human
 hoxa11	4	human
 hoxa10	4	human
-irx5b	4	human
 angptl2	4	human
 sp8	4	human
 sp9	4	human
@@ -154,9 +153,7 @@ dlx1	3	mouse
 irx3	3	mouse
 irx2	3	mouse
 rspo2	1	mouse
-dlx(family)	3	mouse
 pitx1	1	mouse
-irx5b	4	mouse
 tbx3	3	mouse
 tbx2	3	mouse
 fgfr2	1	mouse
@@ -222,13 +219,11 @@ tbx5	4	xenopus
 hoxa13	3	xenopus
 hoxa11	3	xenopus
 t	2	xenopus
-irx5b	4	xenopus
 pax1	4	xenopus
 irx3	4	xenopus
 sox9	3	xenopus
 irx5	4	xenopus
 irx4	4	xenopus
-irx6	4	xenopus
 irx1	4	xenopus
 hoxa9	3	xenopus
 irx2	4	xenopus
